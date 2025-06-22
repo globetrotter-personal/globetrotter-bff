@@ -1,40 +1,31 @@
-server:
-  port: 8081
-
 spring:
-  application:
-    name: globetrotter-bff
-  cloud:
-    openfeign:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-demo-key}
+      model: ${OPENAI_MODEL:gpt-3.5-turbo}
+    mcp:
       client:
-        config:
-          default:
-            connectTimeout: 5000
-            readTimeout: 90000
-    circuitbreaker:
-      resilience4j:
-        enabled: true
+        sse:
+          connections:
+            globetrotter-mcp-server:
+              url: http://globetrotter-mcp-server:8082
 
-# Services configuration
-services:
-  travel:
-    url: http://globetrotter-services:8080
-  openai:
-    url: http://globetrotter-services:8080
+logging:
+  level:
+    root: INFO
+    com.globetrotter.bff: ${LOGGING_LEVEL_COM_GLOBETROTTER_BFF:INFO}
+    com.globetrotter.bff.controller.TravelController: ${LOGGING_LEVEL_COM_GLOBETROTTER_BFF_CONTROLLER_TRAVELCONTROLLER:INFO}
+    org.springframework.web: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB:INFO}
+    org.springframework.ai: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_AI:INFO}
+    org.springframework.boot: INFO
+    org.springframework.ai.autoconfigure.mcp: ${LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_AI_AUTOCONFIGURE_MCP:INFO}
+    io.modelcontextprotocol: ${LOGGING_LEVEL_IO_MODELCONTEXTPROTOCOL:INFO}
 
-# Actuator endpoints
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: always
-  metrics:
-    export:
-      prometheus:
-        enabled: true
+server:
+  port: 8084
+
+# Debug configuration
+debug: ${DEBUG:false}
 
 # OpenAPI documentation
 springdoc:

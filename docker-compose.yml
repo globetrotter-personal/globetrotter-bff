@@ -1,16 +1,45 @@
-version: '3.8'
-
 services:
+  # BFF - Backend for Frontend
   globetrotter-bff:
     build:
       context: .
       dockerfile: Dockerfile
+    image: globetrotter-mcp-client:0.0.1-SNAPSHOT
+    container_name: globetrotter-bff
     ports:
-      - "8081:8081"
-    env_file:
-      - .env
+      - "8084:8084"
+      - "5005:5005" # Debug port
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - services.travel.url=http://globetrotter-services:8080
-      - services.openai.url=http://globetrotter-services:8080
+      - SPRING_APPLICATION_NAME=globetrotter-bff
+      - SPRING_AI_MCP_CLIENT_ENABLED=true
+      - SPRING_AI_MCP_SERVER_URL=http://globetrotter-mcp-server:8082
+      - SPRING_AI_MCP_CLIENT_VERSION=1.0.0
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_MODEL=${OPENAI_API_MODEL}
+      # Debug configurations
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - LOGGING_LEVEL_COM_GLOBETROTTER_BFF=DEBUG
+      - LOGGING_LEVEL_COM_GLOBETROTTER_BFF_CONTROLLER_TRAVELCONTROLLER=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_AI=DEBUG
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_AI_AUTOCONFIGURE_MCP=DEBUG
+      - LOGGING_LEVEL_IO_MODELCONTEXTPROTOCOL=DEBUG
+      - DEBUG=true
     restart: unless-stopped
+    networks:
+      - globetrotter-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  globetrotter-network:
+    external: true
+  # volumes:
+  # Add any persistent volumes if needed
+  # maven-cache:
+  #   driver: local
